@@ -7,44 +7,10 @@ let package = Package(
     products: [
         .library(name: "SilentMoonNetworkCommon",
                  targets: ["SilentMoonNetworkCommon"]),
-        
-        .library(name: "SilentMoonDTOs",
-                 targets: ["SilentMoonDTOs"]),
-        
-        .library(name: "SilentMoonManagers",
-                 targets: ["SilentMoonManagers"]) ,
- 
-    .library(
-           name: "SilentMoonApiService",
-           targets: ["SilentMoonApiService"]
-       )
-   ],
+    ],
     targets: [
         .target(
             name: "SilentMoonNetworkCommon"
         ),
-        .target(
-            name: "SilentMoonDTOs",
-            dependencies: [
-                "SilentMoonNetworkCommon"
-            ]
-        ),
-        .target(
-            name: "SilentMoonManagers",
-            dependencies: [
-                "SilentMoonNetworkCommon",
-                "SilentMoonDTOs",
-                
-            ]
-        ),
-        .target(
-                name: "SilentMoonApiService",
-                dependencies: [
-                    "SilentMoonNetworkCommon",
-                    "SilentMoonDTOs",
-                    "SilentMoonManagers"
-                ]
-            )
-        ]
-    
+    ]
 )

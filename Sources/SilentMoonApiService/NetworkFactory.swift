@@ -1,13 +1,12 @@
 //
 //  NetworkFactory.swift
-//  SilentMoonNetwork
+//  SilentMoonData
 //
 //  Created by Kerimov Qehreman on 10.08.26.
 //
 
 import Foundation
 import SilentMoonNetworkCommon
-import SilentMoonManagers
 
 public struct NetworkFactory {
     public static func make() -> (
