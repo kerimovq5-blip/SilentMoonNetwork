@@ -5,12 +5,12 @@ let package = Package(
     name: "SilentMoonNetwork",
     platforms: [.iOS(.v16)],
     products: [
-        .library(name: "SilentMoonNetworkCommon",
-                 targets: ["SilentMoonNetworkCommon"]),
+        .library(name: "SilentMoonNetwork",
+                 targets: ["SilentMoonNetwork"]),
     ],
     targets: [
         .target(
-            name: "SilentMoonNetworkCommon"
+            name: "SilentMoonNetwork"
         ),
     ]
 )
