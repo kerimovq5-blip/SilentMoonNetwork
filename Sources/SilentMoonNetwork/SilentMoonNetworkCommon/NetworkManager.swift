@@ -9,12 +9,11 @@ import Foundation
 
 public final class NetworkManager<E: BackendError> {
     
-    private let session: URLSession
-    private let mainPath: String
+    public let session: URLSession
+    public let mainPath: String
     public let header: [String: String]
-    private let tokenStore: TokenStore
-    private let errorDecoder: (Data) -> Error?
-    
+    public let tokenStore: TokenStore
+    public let errorDecoder: (Data) -> Error?
     
     public init(
         session: URLSession = .shared,
@@ -33,20 +32,12 @@ public final class NetworkManager<E: BackendError> {
         
     }
     
-    
-    public func request<T: Decodable>(
-        endPoint: EndPoint
-    ) async -> Result<T, Error> {
-        
+    public func request<T: Decodable>(endPoint: EndPoint) async -> Result<T, Error> {
         let urlRequestResult = urlRequest(endPoint: endPoint)
-        
         switch urlRequestResult {
-            
         case .success(let urlRequest):
-            
             do {
-                
-#if DEBUG
+                #if DEBUG
                 print("\n🌐 [NetworkManager Request]")
                 print("📌 URL:", urlRequest.url?.absoluteString ?? "")
                 print("🛠 Method:", urlRequest.httpMethod ?? "")
@@ -54,18 +45,13 @@ public final class NetworkManager<E: BackendError> {
                 if let body = urlRequest.httpBody,
                    let bodyString = String(data: body, encoding: .utf8) {
                     print("📦 Body:", bodyString)
-                }
-#endif
-                
+        } #endif
                 let (data, response) = try await session.data(for: urlRequest)
-                
 #if DEBUG
-                if let httpResponse = response as? HTTPURLResponse {
+           if let httpResponse = response as? HTTPURLResponse {
                     print("🔢 Status Code:", httpResponse.statusCode)
                 }
-                
                 print("📦 Response data count:", data.count)
-                
                 if data.isEmpty {
                     print("📩 Response Body: EMPTY")
                 } else if let responseString = String(
@@ -77,9 +63,7 @@ public final class NetworkManager<E: BackendError> {
                 
                 print("----------------------------------------\n")
 #endif
-                
-                
-                if let appError = AppError<E>.map(
+                 if let appError = AppError<E>.map(
                     data: data,
                     response: response,
                     error: nil,
@@ -87,18 +71,12 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     return .failure(appError)
                 }
-                
-                
+                  
                 do {
-                    let result = try JSONDecoder().decode(
-                        T.self,
-                        from: data
-                    )
-                    
+                    let result = try JSONDecoder().decode(T.self,from: data)
                     return .success(result)
                     
                 } catch {
-                   
                     if data.isEmpty,
                        let emptyObjectData = "{}".data(using: .utf8),
                        let fallbackResult = try? JSONDecoder().decode(T.self, from: emptyObjectData) {
@@ -110,9 +88,7 @@ public final class NetworkManager<E: BackendError> {
                     print("❌ Decoding error:", error)
                     return .failure(AppError<E>.decodingFailed)
                 }
-                
             } catch {
-                
                 if let appError = AppError<E>.map(
                     data: nil,
                     response: nil,
@@ -121,24 +97,18 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     return .failure(appError)
                 }
-                
                 return .failure(error)
             }
-            
         case .failure(let error):
             return .failure(error)
         }
     }
-    
-    
-    public func request(
-        endPoint: EndPoint
-    ) async -> Result<Void, Error> { let urlRequestResult = urlRequest(endPoint: endPoint)
+    public func request(endPoint: EndPoint) async -> Result<Void, Error> {
+        let urlRequestResult = urlRequest(endPoint: endPoint)
         switch urlRequestResult {
         case .success(let urlRequest):
             
             do {
-                
 #if DEBUG
                 print("\n🌐 [NetworkManager Request]")
                 print("📌 URL:", urlRequest.url?.absoluteString ?? "")
@@ -149,15 +119,12 @@ public final class NetworkManager<E: BackendError> {
                     print("📦 Body:", bodyString)
                 }
 #endif
-                
                 let (data, response) = try await session.data(for: urlRequest)
 #if DEBUG
                 if let httpResponse = response as? HTTPURLResponse {
                     print("🔢 Status Code:", httpResponse.statusCode)
                 }
-                
                 print("📦 Response data count:", data.count)
-                
                 if data.isEmpty {
                     print("📩 Response Body: EMPTY")
                 } else if let responseString = String(
@@ -166,10 +133,8 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     print("📩 Response Body:", responseString)
                 }
-                
                 print("----------------------------------------\n")
 #endif
-                
                 if let appError = AppError<E>.map(
                     data: data,
                     response: response,
@@ -178,10 +143,8 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     return .failure(appError)
                 }
-                    return .success(())
-                
+                return .success(())
             } catch {
-                
                 if let appError = AppError<E>.map(
                     data: nil,
                     response: nil,
@@ -190,7 +153,6 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     return .failure(appError)
                 }
-                
                 return .failure(error)
             }
             
@@ -198,24 +160,14 @@ public final class NetworkManager<E: BackendError> {
             return .failure(error)
         }
     }
-    
-    
-    
-    public func urlRequest(
-        endPoint: EndPoint
-    ) -> Result<URLRequest, Error> {
-        
-        let path = "\(mainPath)\(endPoint.path)"
-        
-        guard var url = URL(string: path) else {
+
+public func urlRequest(endPoint: EndPoint) -> Result<URLRequest, Error> {
+   let path = "\(mainPath)\(endPoint.path)"
+    guard var url = URL(string: path) else {
             return .failure(AppError<E>.invalidURL)
         }
-        
         url.append(queryItems: endPoint.queryItems)
-        
         var urlRequest = URLRequest(url: url)
-        
-      
         header.forEach { key, value in
             urlRequest.setValue(
                 value,
@@ -232,20 +184,16 @@ public final class NetworkManager<E: BackendError> {
         }
         urlRequest.httpMethod = endPoint.method.rawValue
         
-        if let body = endPoint.requestBody {
-            
-            switch body {
-                
+    if let body = endPoint.requestBody {
+          switch body {
             case .rawdata(let data):
                 urlRequest.httpBody = data
-                
             case .encodable(let encodable):
                 do {
                     urlRequest.httpBody = try JSONEncoder().encode(encodable)
                 } catch {
                     return .failure(error)
                 }
-                
             case .dictionary(let dictionary):
                 do {
                     urlRequest.httpBody = try JSONSerialization.data(
@@ -256,23 +204,16 @@ public final class NetworkManager<E: BackendError> {
                 }
             }
         }
-        
         return .success(urlRequest)
     }
-    public func loadData(
-        urlString: String
-    ) async -> Result<Data, Error> {
-        
+    public func loadData(urlString: String) async -> Result<Data, Error> {
         guard let url = URL(string: urlString) else {
             return .failure(AppError<E>.invalidURL)
         }
-        
         do {
-            
             let (data, response) = try await session.data(
                 from: url
             )
-            
             if let appError = AppError<E>.map(
                 data: data,
                 response: response,
@@ -283,9 +224,7 @@ public final class NetworkManager<E: BackendError> {
             }
             
             return .success(data)
-            
         } catch {
-            
             if let appError = AppError<E>.map(
                 data: nil,
                 response: nil,
@@ -294,7 +233,6 @@ public final class NetworkManager<E: BackendError> {
             ) {
                 return .failure(appError)
             }
-            
             return .failure(error)
         }
     }
