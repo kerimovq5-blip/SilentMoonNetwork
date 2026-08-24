@@ -71,11 +71,9 @@ public final class NetworkManager<E: BackendError> {
                 ) {
                     return .failure(appError)
                 }
-                  
                 do {
                     let result = try JSONDecoder().decode(T.self,from: data)
                     return .success(result)
-                    
                 } catch {
                     if data.isEmpty,
                        let emptyObjectData = "{}".data(using: .utf8),
@@ -161,79 +159,86 @@ public final class NetworkManager<E: BackendError> {
         }
     }
 
-public func urlRequest(endPoint: EndPoint) -> Result<URLRequest, Error> {
-   let path = "\(mainPath)\(endPoint.path)"
-    guard var url = URL(string: path) else {
-            return .failure(AppError<E>.invalidURL)
-        }
-        url.append(queryItems: endPoint.queryItems)
-        var urlRequest = URLRequest(url: url)
-        header.forEach { key, value in
-            urlRequest.setValue(
-                value,
-                forHTTPHeaderField: key
-            )
-        }
-            if endPoint.requiresAuth,
-           let accessToken = tokenStore.accessToken {
+    public func urlRequest(endPoint: EndPoint) -> Result<URLRequest, Error> {
+       let path = "\(mainPath)\(endPoint.path)"
+        guard var url = URL(string: path) else {
+                return .failure(AppError<E>.invalidURL)
+            }
+            url.append(queryItems: endPoint.queryItems)
+            var urlRequest = URLRequest(url: url)
+          header.forEach { key, value in
+                   urlRequest.setValue(
+                       value,
+                       forHTTPHeaderField: key
+                   )
+               }
+
+            let supportedLanguages: Set<String> = ["az", "en", "ru"]
+            let deviceLanguage = Locale.preferredLanguages.first
+                .flatMap { Locale(identifier: $0).language.languageCode?.identifier }
+            let acceptLanguage = supportedLanguages.contains(deviceLanguage ?? "") ? (deviceLanguage ?? "en") : "en"
+            urlRequest.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
+
+                if endPoint.requiresAuth,
+               let accessToken = tokenStore.accessToken {
+                
+                urlRequest.setValue(
+                    "Bearer \(accessToken)",
+                    forHTTPHeaderField: "Authorization"
+                )
+            }
+            urlRequest.httpMethod = endPoint.method.rawValue
             
-            urlRequest.setValue(
-                "Bearer \(accessToken)",
-                forHTTPHeaderField: "Authorization"
-            )
-        }
-        urlRequest.httpMethod = endPoint.method.rawValue
-        
-    if let body = endPoint.requestBody {
-          switch body {
-            case .rawdata(let data):
-                urlRequest.httpBody = data
-            case .encodable(let encodable):
-                do {
-                    urlRequest.httpBody = try JSONEncoder().encode(encodable)
-                } catch {
-                    return .failure(error)
-                }
-            case .dictionary(let dictionary):
-                do {
-                    urlRequest.httpBody = try JSONSerialization.data(
-                        withJSONObject: dictionary
-                    )
-                } catch {
-                    return .failure(error)
+        if let body = endPoint.requestBody {
+              switch body {
+                case .rawdata(let data):
+                    urlRequest.httpBody = data
+                case .encodable(let encodable):
+                    do {
+                        urlRequest.httpBody = try JSONEncoder().encode(encodable)
+                    } catch {
+                        return .failure(error)
+                    }
+                case .dictionary(let dictionary):
+                    do {
+                        urlRequest.httpBody = try JSONSerialization.data(
+                            withJSONObject: dictionary
+                        )
+                    } catch {
+                        return .failure(error)
+                    }
                 }
             }
+            return .success(urlRequest)
         }
-        return .success(urlRequest)
-    }
-    public func loadData(urlString: String) async -> Result<Data, Error> {
-        guard let url = URL(string: urlString) else {
-            return .failure(AppError<E>.invalidURL)
-        }
-        do {
-            let (data, response) = try await session.data(
-                from: url
-            )
-            if let appError = AppError<E>.map(
-                data: data,
-                response: response,
-                error: nil,
-                errorDecoder: errorDecoder
-            ) {
-                return .failure(appError)
+        public func loadData(urlString: String) async -> Result<Data, Error> {
+            guard let url = URL(string: urlString) else {
+                return .failure(AppError<E>.invalidURL)
             }
-            
-            return .success(data)
-        } catch {
-            if let appError = AppError<E>.map(
-                data: nil,
-                response: nil,
-                error: error,
-                errorDecoder: errorDecoder
-            ) {
-                return .failure(appError)
+            do {
+                let (data, response) = try await session.data(
+                    from: url
+                )
+                if let appError = AppError<E>.map(
+                    data: data,
+                    response: response,
+                    error: nil,
+                    errorDecoder: errorDecoder
+                ) {
+                    return .failure(appError)
+                }
+                
+                return .success(data)
+            } catch {
+                if let appError = AppError<E>.map(
+                    data: nil,
+                    response: nil,
+                    error: error,
+                    errorDecoder: errorDecoder
+                ) {
+                    return .failure(appError)
+                }
+                return .failure(error)
             }
-            return .failure(error)
         }
     }
-}
