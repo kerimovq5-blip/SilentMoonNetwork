@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SilenMoonData
+
 public final class NetworkManager<E: BackendError> {
     
     public let session: URLSession
