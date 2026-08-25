@@ -10,9 +10,20 @@ let package = Package(
             targets: ["SilentMoonNetwork"]
         ),
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/kerimovq5-blip/SilentMoonData.git",
+            branch: "main"
+                )
+        
+        
+    ],
     targets: [
         .target(
-            name: "SilentMoonNetwork"
+            name: "SilentMoonNetwork",
+            dependencies: [
+                "SilentMoonData"
+            ]
         ),
     ]
 )
