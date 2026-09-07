@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SilentMoonDomain
 
 public final class NetworkManager<E: BackendError> {
     

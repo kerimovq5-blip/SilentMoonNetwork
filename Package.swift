@@ -12,7 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/kerimovq5-blip/SilentMoonDomain",
+            url: "https://github.com/kerimovq5-blip/SilentMoonDomain.git",
             branch: "main"
         ),
     ],

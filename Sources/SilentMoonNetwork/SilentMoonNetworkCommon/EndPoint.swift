@@ -7,6 +7,7 @@
 
 
 import Foundation
+import SilentMoonDomain
 
 public protocol EndPoint {
      var path: String { get }
